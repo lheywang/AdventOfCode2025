@@ -16,6 +16,9 @@
 int increment_value(int count)
 {
     static int value = 50;
+    static int pass = 0;
+    static int old_pass = 0;
+
     int count_save = abs(count);
 
     /*
@@ -30,6 +33,12 @@ int increment_value(int count)
             {
                 value = 0;
             }
+
+            if (value == 0)
+            {
+                pass += 1;
+            }
+
             count_save -= 1;
         }
     }
@@ -43,11 +52,23 @@ int increment_value(int count)
                 value = 99;
             }
 
+            if (value == 0)
+            {
+                pass += 1;
+            }
+
             count_save -= 1;
         }
     }
 
-    return value;
+    /*
+     * For step 1 purposes
+     */
+    if (value == 0)
+        old_pass += 1;
+
+    printf("Command | New | Zeros = %4d | %4d | %4d\n", count, value, pass);
+    return pass;
 }
 
 int main(int argc, char **argv)
@@ -57,7 +78,6 @@ int main(int argc, char **argv)
 
     // Initialize some data
     char buffer[8] = {0};
-    int position = 0;
     int pass = 0;
 
     int next_value = 0;
@@ -81,13 +101,7 @@ int main(int argc, char **argv)
                     break;
             }
 
-            position = increment_value(next_value);
-            if (position == 0)
-            {
-                pass +=1 ;
-            }
-
-            printf("Raw : %s--> Value = %d\n--> New = %d\n", buffer, next_value, position);
+            pass = increment_value(next_value);
         }
 
         printf("Pass = %d\n", pass);
