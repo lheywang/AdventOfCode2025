@@ -1,6 +1,6 @@
 all:
 	clear
-	gcc -o main.elf ./main.c
+	gcc -Wall -o main.elf ./main.c
 	./main.elf
 
 clean:
