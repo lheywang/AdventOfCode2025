@@ -26,6 +26,38 @@
 
 static uint8_t array[LINE_NB][COLU_NB] = { 0 };
 
+int process_line(uint8_t input[COLU_NB], uint8_t output[COLU_NB])
+{
+    int switches = 0;
+    for (int i = 0; i < COLU_NB; i++)
+    {
+        /*
+         * Check if there was an element on this line
+         */
+        if (input[i] == USED)
+        {
+            switch (output[i])
+            {
+                case FREE:
+                    output[i] = USED; // report one line under
+                    break;
+                case SPLT:
+                    if (i > 1) {output[i - 1] = USED;}
+                    if (i < (COLU_NB - 1)) {output[i + 1] = USED;}
+                    switches += 1;
+                    break;
+
+                // Do nothing
+                case USED:
+                default:
+                    break;
+            }
+        }
+    }
+
+    return switches;
+}
+
 int main(int argc, char **argv)
 {
     // open the source file
@@ -68,15 +100,30 @@ int main(int argc, char **argv)
         printf("Cannot open file !\n");
     }
 
-    // Showing memory status
-    for (int i = 0; i < LINE_NB; i++)
+    int splits = 0;
+    for (int lines = 0; lines < (LINE_NB - 1); lines ++)
     {
-        for (int ii = 0; ii < COLU_NB; ii++)
+
+        int tmp = process_line(array[lines], array[lines + 1]); // process a line, and output it into the next one
+        splits += tmp;
+
+        printf("Line %d : Splits %d\n", lines, tmp);
+
+        // Showing memory status
+        for (int i = 0; i < LINE_NB; i++)
         {
-            printf("%c", array[i][ii]);
+            for (int ii = 0; ii < COLU_NB; ii++)
+            {
+                printf("%c", array[i][ii]);
+            }
+            printf("\n");
         }
-        printf("\n");
     }
+
+    printf("\n\n");
+    printf("Result 1 : %d\n", splits);
+    printf("Result 2 : %d\n", 0);
+    printf("\n\n");
 
     return EXIT_SUCCESS;
 }
