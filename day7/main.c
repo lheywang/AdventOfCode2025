@@ -25,6 +25,7 @@
 #define SPLT ('^')
 
 static uint8_t array[LINE_NB][COLU_NB] = { 0 };
+static uint64_t ways[LINE_NB][COLU_NB] = { 0 }; // For step 2
 
 int process_line(uint8_t input[COLU_NB], uint8_t output[COLU_NB])
 {
@@ -42,7 +43,7 @@ int process_line(uint8_t input[COLU_NB], uint8_t output[COLU_NB])
                     output[i] = USED; // report one line under
                     break;
                 case SPLT:
-                    if (i > 1) {output[i - 1] = USED;}
+                    if (i > 0) {output[i - 1] = USED;}
                     if (i < (COLU_NB - 1)) {output[i + 1] = USED;}
                     switches += 1;
                     break;
@@ -56,6 +57,34 @@ int process_line(uint8_t input[COLU_NB], uint8_t output[COLU_NB])
     }
 
     return switches;
+}
+
+int count_ways(uint64_t input[COLU_NB], uint64_t output[COLU_NB], uint8_t elements[COLU_NB])
+{
+    for (int i = 0; i < COLU_NB; i++)
+    {
+        uint64_t w = input[i];
+
+        // Ignore if no ways are presents --> won't change the output.
+        if (w == 0)
+            continue;
+
+        // Handle the cases :
+        switch (elements[i])
+        {
+            case FREE:
+            case USED:
+                output[i] += w;
+                break;
+            case SPLT:
+                if (i > 0) {output[i - 1] += w;}
+                if (i < (COLU_NB - 1)) {output[i + 1] += w;}
+                break;
+            default:
+                break;
+
+        } 
+    }
 }
 
 int main(int argc, char **argv)
@@ -80,18 +109,20 @@ int main(int argc, char **argv)
                 {
                     case 'S':
                         array[line][chr] = USED;
+                        ways[line][chr] = 1;
                         break;
                     case '^':
                         array[line][chr] = SPLT;
+                        ways[line][chr] = 0;
                         break;
                     case '.':
                     default:
                         array[line][chr] = FREE;
+                        ways[line][chr] = 0;
                         break;
                 }
             }
             line += 1;
-            // memset((void *)buffer, 0x00, (size_t)sizeof(buffer));
         }
         fclose(file);
     }
@@ -100,29 +131,29 @@ int main(int argc, char **argv)
         printf("Cannot open file !\n");
     }
 
+    // Compute stage 2 before going on stage 1
+    for (int lines = 0; lines < (LINE_NB - 1); lines ++)
+    {
+        count_ways(ways[lines], ways[lines + 1], array[lines]);
+    }
+
     int splits = 0;
     for (int lines = 0; lines < (LINE_NB - 1); lines ++)
     {
+        splits += process_line(array[lines], array[lines + 1]); // process a line, and output it into the next one
+    }
 
-        int tmp = process_line(array[lines], array[lines + 1]); // process a line, and output it into the next one
-        splits += tmp;
-
-        printf("Line %d : Splits %d\n", lines, tmp);
-
-        // Showing memory status
-        for (int i = 0; i < LINE_NB; i++)
-        {
-            for (int ii = 0; ii < COLU_NB; ii++)
-            {
-                printf("%c", array[i][ii]);
-            }
-            printf("\n");
-        }
+    // Couting the ways (last line)
+    uint64_t sum = 0;
+    for (int i = 0; i < COLU_NB; i++)
+    {
+        sum += ways[LINE_NB - 1][i];
+        printf("%3d --> %16lld | %16lld\n", i, ways[LINE_NB - 1][i], sum);
     }
 
     printf("\n\n");
     printf("Result 1 : %d\n", splits);
-    printf("Result 2 : %d\n", 0);
+    printf("Result 2 : %lld\n", sum);
     printf("\n\n");
 
     return EXIT_SUCCESS;
